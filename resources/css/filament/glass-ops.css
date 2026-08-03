@@ -1,0 +1,625 @@
+/*
+ * Glass Ops — "Tempered Glass" visual theme.
+ *
+ * Hand-written vanilla CSS layered over Filament's prebuilt stylesheet. There
+ * is deliberately NO custom Filament/Tailwind theme build in this repo (see
+ * CLAUDE.md), so this file must never rely on Tailwind utilities compiling —
+ * everything here is plain CSS targeting Filament's stable `fi-*` hooks.
+ *
+ * Registered via FilamentAsset in AppServiceProvider and published to
+ * public/css/app/glass-ops.css by `php artisan filament:assets` (which both
+ * the GitHub Action deploy and deploy.sh --live already run).
+ *
+ * Filament loads registered assets BEFORE its own dist theme, so equal
+ * selectors would lose the cascade — every override below either carries a
+ * `.fi-body` specificity boost or an explicit !important.
+ *
+ * Design language: the product itself. Deep "midnight glass" sidebar with a
+ * cyan aurora (the green-blue edge tint of real windshield glass), frosted
+ * translucent topbar, cool azure primary, layered glass cards, Bricolage
+ * Grotesque display type over Instrument Sans. Light and dark mode both.
+ */
+
+@import url('https://fonts.bunny.net/css?family=bricolage-grotesque:500,600,700,800&display=swap');
+
+:root {
+    --go-display-font: 'Bricolage Grotesque', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+
+    /* Midnight-glass sidebar surfaces (same in light + dark). */
+    --go-night-1: #081824;
+    --go-night-2: #0b2434;
+    --go-night-3: #0e2f44;
+
+    /* Windshield-edge accent. */
+    --go-glass-300: #7dd6ea;
+    --go-glass-400: #3fb9d8;
+    --go-glass-500: #159cc4;
+
+    --go-card-border: rgba(11, 42, 66, 0.09);
+    --go-card-shadow:
+        0 1px 2px rgba(8, 24, 36, 0.05),
+        0 10px 28px -18px rgba(8, 24, 36, 0.25);
+}
+
+/* ------------------------------------------------------------------ */
+/* App canvas — a cool wash with faint aurora tints, not flat gray.    */
+/* ------------------------------------------------------------------ */
+
+.fi-body {
+    background-color: #f2f6f9;
+    background-image:
+        radial-gradient(60rem 32rem at 88% -8%, rgba(63, 185, 216, 0.13), transparent 55%),
+        radial-gradient(50rem 30rem at -12% 28%, rgba(21, 124, 166, 0.07), transparent 50%);
+    background-attachment: fixed;
+}
+
+.dark .fi-body {
+    background-color: #0a141f;
+    background-image:
+        radial-gradient(60rem 32rem at 88% -8%, rgba(34, 130, 160, 0.16), transparent 55%),
+        radial-gradient(50rem 30rem at -12% 28%, rgba(15, 90, 125, 0.12), transparent 50%);
+}
+
+/* ⚠️ No entrance animation on .fi-main — an animated/filled `transform` there
+   makes .fi-main the CONTAINING BLOCK for position:fixed descendants
+   (per CSS Transforms), and Filament's modals/slide-overs are fixed-positioned
+   INSIDE .fi-main. The result was modals sized against the full page instead
+   of the viewport: no way to scroll them (broken on prod 2026-07-29). Don't
+   reintroduce transform/filter/backdrop-filter on .fi-main, .fi-page,
+   .fi-main-ctn, or .fi-layout for the same reason. */
+
+/* ------------------------------------------------------------------ */
+/* Sidebar — midnight glass with a cyan aurora, in BOTH color modes.   */
+/* ------------------------------------------------------------------ */
+
+.fi-body .fi-sidebar {
+    background-color: var(--go-night-1) !important;
+    background-image:
+        radial-gradient(28rem 20rem at 120% -6%, rgba(21, 156, 196, 0.28), transparent 60%),
+        radial-gradient(22rem 26rem at -40% 108%, rgba(13, 94, 130, 0.35), transparent 62%),
+        linear-gradient(200deg, var(--go-night-3) 0%, var(--go-night-2) 42%, var(--go-night-1) 100%);
+    border-inline-end: 1px solid rgba(125, 214, 234, 0.10);
+    box-shadow: 1px 0 24px rgba(4, 14, 22, 0.35);
+}
+
+.fi-body .fi-sidebar-header {
+    background: transparent !important;
+    box-shadow: none !important;
+    border-bottom: 1px solid rgba(125, 214, 234, 0.10);
+}
+
+/* Sidebar scrollbar — slim glass. */
+.fi-body .fi-sidebar-nav {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(125, 214, 234, 0.22) transparent;
+}
+
+.fi-body .fi-sidebar-nav::-webkit-scrollbar {
+    width: 5px;
+}
+
+.fi-body .fi-sidebar-nav::-webkit-scrollbar-thumb {
+    background: rgba(125, 214, 234, 0.22);
+    border-radius: 999px;
+}
+
+/* Group labels — micro caps in glass cyan. */
+.fi-body .fi-sidebar-group-label {
+    color: rgba(125, 214, 234, 0.75) !important;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.fi-body .fi-sidebar-group-collapse-btn,
+.fi-body .fi-sidebar-group-collapse-btn svg {
+    color: rgba(173, 213, 233, 0.55) !important;
+}
+
+/* Items. */
+.fi-body .fi-sidebar-item-btn {
+    border-radius: 0.55rem;
+    transition: background-color 0.15s ease;
+}
+
+.fi-body .fi-sidebar-item-btn:hover {
+    background-color: rgba(125, 214, 234, 0.08) !important;
+}
+
+.fi-body .fi-sidebar-item-label {
+    color: rgba(205, 227, 240, 0.92) !important;
+    font-weight: 500;
+}
+
+.fi-body .fi-sidebar-item-icon {
+    color: rgba(148, 186, 208, 0.85) !important;
+    transition: color 0.15s ease;
+}
+
+.fi-body .fi-sidebar-item-btn:hover .fi-sidebar-item-icon {
+    color: var(--go-glass-300) !important;
+}
+
+/* Active item — a lit glass pill with a cyan edge. */
+.fi-body .fi-sidebar-item.fi-active > .fi-sidebar-item-btn,
+.fi-body .fi-sidebar-item.fi-sidebar-item-has-active-child-items > .fi-sidebar-item-btn {
+    background:
+        linear-gradient(90deg, rgba(21, 156, 196, 0.28), rgba(21, 156, 196, 0.10)) !important;
+    box-shadow:
+        inset 2.5px 0 0 0 var(--go-glass-400),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.fi-body .fi-sidebar-item.fi-active > .fi-sidebar-item-btn .fi-sidebar-item-label {
+    color: #ffffff !important;
+    font-weight: 600;
+}
+
+.fi-body .fi-sidebar-item.fi-active > .fi-sidebar-item-btn .fi-sidebar-item-icon {
+    color: var(--go-glass-300) !important;
+}
+
+/* Grouped sub-item connector lines. */
+.fi-body .fi-sidebar-item-grouped-border-part {
+    border-color: rgba(125, 214, 234, 0.18) !important;
+}
+
+/* Collapse / misc icon buttons living inside the dark sidebar. */
+.fi-body .fi-sidebar .fi-icon-btn {
+    color: rgba(173, 213, 233, 0.6);
+}
+
+.fi-body .fi-sidebar .fi-icon-btn:hover {
+    color: #ffffff;
+    background-color: rgba(125, 214, 234, 0.10);
+}
+
+/* ------------------------------------------------------------------ */
+/* Topbar — frosted glass.                                             */
+/* ------------------------------------------------------------------ */
+
+/* Near-opaque frosted glass: Chromium composites backdrop-filter over the
+   body's fixed background unreliably, so the tint must carry the color on
+   its own and the blur is only an accent for content scrolling beneath. */
+.fi-body .fi-topbar {
+    background-color: rgba(252, 254, 255, 0.88) !important;
+    -webkit-backdrop-filter: blur(14px) saturate(1.4);
+    backdrop-filter: blur(14px) saturate(1.4);
+    border-bottom: 1px solid rgba(11, 42, 66, 0.07);
+    box-shadow: 0 1px 12px rgba(8, 24, 36, 0.04);
+}
+
+.dark .fi-body .fi-topbar {
+    background-color: rgba(10, 21, 33, 0.92) !important;
+    border-bottom-color: rgba(125, 214, 234, 0.08);
+}
+
+/* ------------------------------------------------------------------ */
+/* Brand — mark + wordmark (resources/views/filament/brand.blade.php). */
+/* ------------------------------------------------------------------ */
+
+.go-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    height: 100%;
+}
+
+.go-brand svg {
+    height: 100%;
+    width: auto;
+    filter: drop-shadow(0 2px 6px rgba(21, 156, 196, 0.45));
+}
+
+.go-brand-word {
+    font-family: var(--go-display-font);
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.go-brand-word small {
+    display: block;
+    font-size: 0.56rem;
+    font-weight: 600;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    opacity: 0.62;
+    margin-top: 0.18rem;
+}
+
+/* Wordmark color adapts to where the logo renders: white in the dark
+   sidebar; ink on the frosted topbar and inside the light login card. */
+.fi-sidebar .go-brand-word {
+    color: #ffffff;
+}
+
+.fi-topbar .go-brand-word,
+.fi-simple-layout .go-brand-word {
+    color: #0e2434;
+}
+
+.dark .fi-topbar .go-brand-word,
+.dark .fi-simple-layout .go-brand-word {
+    color: #ffffff;
+}
+
+/* ------------------------------------------------------------------ */
+/* Typography — display face for the moments that carry the page.      */
+/* ------------------------------------------------------------------ */
+
+.fi-body .fi-header-heading,
+.fi-body .fi-section-header-heading,
+.fi-body .fi-modal-heading,
+.fi-body .fi-wi-stats-overview-stat-value,
+.fi-body .fi-ta-empty-state-heading,
+.fi-body .fi-simple-page-content h1,
+.fi-body .fi-simple-page-content h2 {
+    font-family: var(--go-display-font);
+    letter-spacing: -0.015em;
+}
+
+.fi-body .fi-header-heading {
+    font-size: 1.7rem;
+    font-weight: 700;
+}
+
+.fi-body .fi-header-subheading {
+    color: #64748b;
+}
+
+/* ------------------------------------------------------------------ */
+/* Cards / sections — layered glass.                                   */
+/* ------------------------------------------------------------------ */
+
+.fi-body .fi-section,
+.fi-body .fi-ta-ctn,
+.fi-body .fi-wi-stats-overview-stat {
+    border-radius: 0.95rem;
+    border: 1px solid var(--go-card-border);
+    box-shadow: var(--go-card-shadow);
+}
+
+.dark .fi-body .fi-section,
+.dark .fi-body .fi-ta-ctn,
+.dark .fi-body .fi-wi-stats-overview-stat {
+    border-color: rgba(125, 214, 234, 0.10);
+    box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.3),
+        0 12px 30px -18px rgba(0, 0, 0, 0.5);
+}
+
+/* Stat cards get a faint aurora sheen + the display face for values. */
+.fi-body .fi-wi-stats-overview-stat {
+    position: relative;
+    overflow: hidden;
+    background-image: radial-gradient(18rem 10rem at 100% 0%, rgba(63, 185, 216, 0.07), transparent 60%);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.fi-body .fi-wi-stats-overview-stat:hover {
+    transform: translateY(-2px);
+    box-shadow:
+        0 2px 4px rgba(8, 24, 36, 0.06),
+        0 18px 38px -18px rgba(8, 24, 36, 0.35);
+}
+
+.fi-body .fi-wi-stats-overview-stat-value {
+    font-size: 1.85rem;
+    font-weight: 700;
+}
+
+/* KPI labels read as micro-caps, like table headers — the value is the star. */
+.fi-body .fi-wi-stats-overview-stat-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: #5b7285;
+}
+
+.dark .fi-body .fi-wi-stats-overview-stat-label {
+    color: #8aa8bd;
+}
+
+/* Per-stat accent: a lit top hairline + tinted label icon, driven by the
+   go-stat--* class each Stat passes via extraAttributes (OpsStatsOverview). */
+.fi-body .go-stat::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--go-stat-accent), transparent 78%);
+}
+
+.fi-body .go-stat--sky {
+    --go-stat-accent: #159cc4;
+}
+
+.fi-body .go-stat--mint {
+    --go-stat-accent: #10b981;
+}
+
+.fi-body .go-stat--amber {
+    --go-stat-accent: #f59e0b;
+}
+
+.fi-body .go-stat--rose {
+    --go-stat-accent: #f43f5e;
+}
+
+.fi-body .go-stat .fi-wi-stats-overview-stat-label-ctn svg {
+    width: 1.05rem;
+    height: 1.05rem;
+    color: var(--go-stat-accent, #159cc4) !important;
+    filter: drop-shadow(0 1px 3px color-mix(in srgb, var(--go-stat-accent, #159cc4) 45%, transparent));
+}
+
+/* ------------------------------------------------------------------ */
+/* Tables — quiet chrome, readable data.                               */
+/* ------------------------------------------------------------------ */
+
+.fi-body .fi-ta-header-cell {
+    background-color: rgba(14, 47, 68, 0.03);
+}
+
+.dark .fi-body .fi-ta-header-cell {
+    background-color: rgba(125, 214, 234, 0.04);
+}
+
+.fi-body .fi-ta-header-cell,
+.fi-body .fi-ta-header-cell button,
+.fi-body .fi-ta-header-cell span {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #5b7285;
+}
+
+.dark .fi-body .fi-ta-header-cell,
+.dark .fi-body .fi-ta-header-cell button,
+.dark .fi-body .fi-ta-header-cell span {
+    color: #8aa8bd;
+}
+
+.fi-body .fi-ta-row {
+    transition: background-color 0.12s ease;
+}
+
+.fi-body .fi-ta-row:hover {
+    background-color: rgba(21, 156, 196, 0.05) !important;
+}
+
+.dark .fi-body .fi-ta-row:hover {
+    background-color: rgba(125, 214, 234, 0.05) !important;
+}
+
+/* Table WIDGETS (dashboard "Today's schedule", EOD warranty payouts) sit in
+   half-width grid cells — tighter cell padding so their columns fit without
+   horizontal scroll. Filament puts the padding on the cell CONTENT
+   (.fi-ta-text:not(.fi-inline) gets px-3 py-4), not the td. */
+.fi-body .fi-wi-table .fi-ta-cell .fi-ta-text {
+    padding-inline: 0.55rem;
+    padding-block: 0.85rem;
+    font-size: 0.8125rem;
+}
+
+.fi-body .fi-wi-table .fi-ta-cell .fi-badge {
+    font-size: 0.7rem;
+}
+
+.fi-body .fi-wi-table .fi-ta-header-cell {
+    padding-inline: 0.55rem;
+}
+
+.fi-body .fi-wi-table .fi-ta-cell:first-of-type,
+.fi-body .fi-wi-table .fi-ta-header-cell:first-of-type {
+    padding-inline-start: 0.35rem;
+}
+
+.fi-body .fi-wi-table .fi-ta-cell:last-of-type,
+.fi-body .fi-wi-table .fi-ta-header-cell:last-of-type {
+    padding-inline-end: 0.35rem;
+}
+
+/* Review-flagged bank-transaction rows (class applied from
+   BankTransactionsTable::recordClasses — style used to live in an inline
+   render hook in AdminPanelProvider; it moved here with the theme). */
+.fi-body .gd-flagged-row {
+    background-color: rgba(245, 158, 11, 0.12) !important;
+    box-shadow: inset 3px 0 0 0 #f59e0b;
+}
+
+.fi-body .gd-flagged-row:hover {
+    background-color: rgba(245, 158, 11, 0.2) !important;
+}
+
+/* ------------------------------------------------------------------ */
+/* Buttons — primary gets depth; everything gets softer radii.         */
+/* ------------------------------------------------------------------ */
+
+.fi-body .fi-btn {
+    border-radius: 0.6rem;
+    transition: box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+.fi-body .fi-btn.fi-color-primary:not(.fi-outlined):not(.fi-link-btn) {
+    background-image: linear-gradient(180deg, var(--primary-500), var(--primary-600));
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.22),
+        0 2px 8px -2px rgba(13, 127, 166, 0.55);
+}
+
+.fi-body .fi-btn.fi-color-primary:not(.fi-outlined):not(.fi-link-btn):hover {
+    filter: brightness(1.06);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.22),
+        0 4px 14px -3px rgba(13, 127, 166, 0.65);
+}
+
+.fi-body .fi-icon-btn {
+    border-radius: 0.55rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* Inputs — crisp glass edges, soft azure focus glow.                  */
+/* ------------------------------------------------------------------ */
+
+.fi-body .fi-input-wrp {
+    border-radius: 0.65rem;
+    transition: box-shadow 0.15s ease;
+}
+
+.fi-body .fi-input-wrp:focus-within {
+    box-shadow: 0 0 0 3px rgba(21, 156, 196, 0.16);
+}
+
+.fi-body .fi-fo-field .fi-checkbox-input,
+.fi-body .fi-fo-field input[type='radio'] {
+    transition: box-shadow 0.15s ease;
+}
+
+/* ------------------------------------------------------------------ */
+/* Tabs — glass rail with a lifted active pill.                        */
+/* ------------------------------------------------------------------ */
+
+.fi-body .fi-tabs {
+    background-color: rgba(14, 47, 68, 0.045);
+    border: 1px solid rgba(11, 42, 66, 0.06);
+    border-radius: 0.8rem;
+    padding: 0.28rem;
+}
+
+.dark .fi-body .fi-tabs {
+    background-color: rgba(125, 214, 234, 0.05);
+    border-color: rgba(125, 214, 234, 0.08);
+}
+
+.fi-body .fi-tabs-item {
+    border-radius: 0.55rem;
+}
+
+.fi-body .fi-tabs-item.fi-active {
+    background-color: #ffffff !important;
+    box-shadow:
+        0 1px 2px rgba(8, 24, 36, 0.08),
+        0 4px 10px -6px rgba(8, 24, 36, 0.2);
+}
+
+.dark .fi-body .fi-tabs-item.fi-active {
+    background-color: rgba(125, 214, 234, 0.12) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* ------------------------------------------------------------------ */
+/* Dropdowns + modals — frosted panels, deep-water overlay.            */
+/* ------------------------------------------------------------------ */
+
+.fi-body .fi-dropdown-panel {
+    border-radius: 0.85rem;
+    border: 1px solid rgba(11, 42, 66, 0.08);
+    background-color: rgba(255, 255, 255, 0.92) !important;
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    box-shadow:
+        0 4px 10px rgba(8, 24, 36, 0.07),
+        0 18px 44px -16px rgba(8, 24, 36, 0.3);
+}
+
+.dark .fi-body .fi-dropdown-panel {
+    border-color: rgba(125, 214, 234, 0.12);
+    background-color: rgba(13, 27, 41, 0.94) !important;
+}
+
+.fi-body .fi-modal-close-overlay {
+    background-color: rgba(4, 16, 27, 0.55) !important;
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+}
+
+.fi-body .fi-modal-window {
+    border-radius: 1.05rem;
+    border: 1px solid rgba(11, 42, 66, 0.08);
+    box-shadow:
+        0 10px 24px rgba(4, 16, 27, 0.18),
+        0 40px 90px -20px rgba(4, 16, 27, 0.45);
+}
+
+.dark .fi-body .fi-modal-window {
+    border-color: rgba(125, 214, 234, 0.12);
+}
+
+/* ------------------------------------------------------------------ */
+/* Badges — a touch more presence.                                     */
+/* ------------------------------------------------------------------ */
+
+.fi-body .fi-badge {
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+/* ------------------------------------------------------------------ */
+/* Login / simple layout — the aurora, full bleed.                     */
+/* ------------------------------------------------------------------ */
+
+.fi-body:has(.fi-simple-layout) {
+    background-color: var(--go-night-1);
+    background-image:
+        radial-gradient(55rem 36rem at 78% -12%, rgba(21, 156, 196, 0.38), transparent 58%),
+        radial-gradient(46rem 32rem at -14% 74%, rgba(13, 94, 130, 0.45), transparent 60%),
+        radial-gradient(30rem 22rem at 50% 118%, rgba(125, 214, 234, 0.16), transparent 60%),
+        linear-gradient(200deg, var(--go-night-3), var(--go-night-1));
+    background-attachment: fixed;
+}
+
+.fi-body .fi-simple-main {
+    border-radius: 1.15rem;
+    background-color: rgba(255, 255, 255, 0.94) !important;
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    box-shadow:
+        0 12px 30px rgba(3, 13, 22, 0.35),
+        0 50px 110px -24px rgba(3, 13, 22, 0.6);
+}
+
+.dark .fi-body .fi-simple-main {
+    background-color: rgba(12, 25, 38, 0.88) !important;
+    border-color: rgba(125, 214, 234, 0.14);
+}
+
+/* Headings inside the simple (login) card. */
+.fi-body .fi-simple-main .fi-header-heading {
+    font-size: 1.45rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* Content scrollbars — slim and unobtrusive.                          */
+/* ------------------------------------------------------------------ */
+
+.fi-body .fi-main-ctn {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(14, 47, 68, 0.25) transparent;
+}
+
+.fi-body .fi-main-ctn::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.fi-body .fi-main-ctn::-webkit-scrollbar-thumb {
+    background: rgba(14, 47, 68, 0.22);
+    border-radius: 999px;
+}
+
+.dark .fi-body .fi-main-ctn {
+    scrollbar-color: rgba(125, 214, 234, 0.2) transparent;
+}
+
+.dark .fi-body .fi-main-ctn::-webkit-scrollbar-thumb {
+    background: rgba(125, 214, 234, 0.18);
+}
