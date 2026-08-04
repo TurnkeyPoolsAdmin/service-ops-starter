@@ -63,18 +63,9 @@ When the tool is ready, Claude will walk you through hosting — putting the too
 
 ---
 
-## What this costs per month (typical)
+## What it costs
 
-| Thing | Cost | Needed? |
-|---|---|---|
-| Claude subscription | $20–100 | Yes |
-| Hosting (Laravel Cloud or Cloudways) | ~$20 | Yes |
-| Texting number (OpenPhone or similar) | ~$15 | Yes, for customer texts |
-| Telegram alerts | Free | Optional |
-| Stripe card payments | Per-transaction fee only | Optional |
-| Bank feed (Plaid) | ~$2 | Optional |
-
-Roughly **$55–75/month** for the full setup. There is no license fee for this software.
+There is no license fee for this software. You pay only for the services around it — your Claude subscription, hosting, and a texting number. Claude will tell you the cost of each piece before you sign up for it.
 
 ## If you get stuck
 
