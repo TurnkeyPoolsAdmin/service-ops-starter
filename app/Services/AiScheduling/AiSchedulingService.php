@@ -296,12 +296,25 @@ class AiSchedulingService
      * — except when they're accepting a job that has already been filled, in
      * which case we tell them so rather than leaving them hanging.
      */
-    public function handleTechReply(Employee $tech, InboundMessage $inbound): void
-    {
-        $attempt = TechOutreach::liveAttemptFor($tech);
+    public function handleTechReply(
+        Employee $tech,
+        InboundMessage $inbound,
+        ?AiSchedulingSession $simulationSession = null,
+    ): void {
+        // Webhooks keep using the one-live-attempt lookup. The typed console
+        // passes its selected session so an old attempt cannot steal a reply
+        // from a different session for the same technician.
+        $attempt = $simulationSession === null
+            ? TechOutreach::liveAttemptFor($tech)
+            : $simulationSession->attempts()
+                ->where('employee_id', $tech->id)
+                ->latest('id')
+                ->first();
 
         if ($attempt === null) {
-            $this->maybeTellTechItIsFilled($tech, $inbound);
+            if ($simulationSession === null) {
+                $this->maybeTellTechItIsFilled($tech, $inbound);
+            }
 
             return;
         }
@@ -871,11 +884,19 @@ class AiSchedulingService
      * actually act on (a confirm, or a new day/time to retarget onto) earns a
      * place on the transcript.
      */
-    public function handleCustomerReply(Customer $customer, InboundMessage $inbound): void
-    {
-        $session = self::liveSessionForCustomer($customer);
+    public function handleCustomerReply(
+        Customer $customer,
+        InboundMessage $inbound,
+        ?AiSchedulingSession $simulationSession = null,
+    ): void {
+        $session = $simulationSession ?? self::liveSessionForCustomer($customer);
 
         if ($session === null || $session->status !== AiSchedulingSession::STATUS_RUNNING) {
+            return;
+        }
+
+        if ($simulationSession !== null
+            && $session->job()->where('customer_id', $customer->id)->doesntExist()) {
             return;
         }
 
@@ -1052,6 +1073,12 @@ class AiSchedulingService
      */
     public function simulateTechReply(AiSchedulingSession $session, Employee $tech, string $body): void
     {
+        // Reject a participant outside the selected session before creating
+        // an inbound row. Historical attempts remain selectable in the UI.
+        if (! $session->attempts()->where('employee_id', $tech->id)->exists()) {
+            return;
+        }
+
         $inbound = InboundMessage::create([
             'employee_id' => $tech->id,
             'from_phone_e164' => (string) $tech->phone,
@@ -1061,12 +1088,16 @@ class AiSchedulingService
             'processed' => true,
         ]);
 
-        $this->handleTechReply($tech, $inbound);
+        $this->handleTechReply($tech, $inbound, $session);
     }
 
     /** The customer-side twin of simulateTechReply() — same real state machine, nothing sent. */
     public function simulateCustomerReply(AiSchedulingSession $session, Customer $customer, string $body): void
     {
+        if ($session->job()->where('customer_id', $customer->id)->doesntExist()) {
+            return;
+        }
+
         $inbound = InboundMessage::create([
             'customer_id' => $customer->id,
             'from_phone_e164' => (string) $customer->phone_e164,
@@ -1076,7 +1107,7 @@ class AiSchedulingService
             'processed' => true,
         ]);
 
-        $this->handleCustomerReply($customer, $inbound);
+        $this->handleCustomerReply($customer, $inbound, $session);
     }
 
     // ---------------------------------------------------------- terminal-ish
