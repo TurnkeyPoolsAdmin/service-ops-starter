@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureActiveEmployee;
 use App\Http\Controllers\PlaidLinkController;
 use App\Http\Controllers\PodiumOAuthController;
 use App\Http\Controllers\ReceiptPdfController;
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', fn () => redirect('/admin'));
 
 // Podium OAuth consent handshake (admin-initiated; session-authenticated).
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', EnsureActiveEmployee::class])->group(function () {
     Route::get('/podium/oauth/connect', [PodiumOAuthController::class, 'connect'])->name('podium.oauth.connect');
     Route::get('/podium/oauth/callback', [PodiumOAuthController::class, 'callback'])->name('podium.oauth.callback');
 
